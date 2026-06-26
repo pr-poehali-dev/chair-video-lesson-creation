@@ -1,8 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
-
-const HERO_IMG = 'https://cdn.poehali.dev/projects/bab22b06-88d2-400b-901c-67ab9bf5c821/files/1036472d-ea3b-42fa-985a-24f87d21fd81.jpg';
-const CARVE_IMG = 'https://cdn.poehali.dev/projects/bab22b06-88d2-400b-901c-67ab9bf5c821/files/5e051b45-7f1b-4a98-b594-dddfab68b730.jpg';
+import Stars from '@/components/Stars';
+import { lessons as lessonData, HERO_IMG, CARVE_IMG } from '@/data/lessons';
 
 interface RatedItem {
   id: number;
@@ -12,57 +12,20 @@ interface RatedItem {
   rating: number;
 }
 
-const initialLessons: RatedItem[] = [
-  { id: 1, title: 'Венский стул из бука', meta: 'Видео урок · 42 мин', img: HERO_IMG, rating: 5 },
-  { id: 2, title: 'Табурет на трёх ножках', meta: 'Видео урок · 28 мин', img: CARVE_IMG, rating: 4 },
-  { id: 3, title: 'Кресло-качалка', meta: 'Видео урок · 1 ч 12 мин', img: HERO_IMG, rating: 5 },
-  { id: 4, title: 'Барный стул с гнутой спинкой', meta: 'Видео урок · 55 мин', img: CARVE_IMG, rating: 4 },
-];
-
 const initialTips: RatedItem[] = [
   { id: 101, title: 'Как выбрать древесину для каркаса', meta: 'Совет · 5 мин чтения', img: CARVE_IMG, rating: 5 },
   { id: 102, title: 'Шиповое соединение без зазоров', meta: 'Совет · 7 мин чтения', img: HERO_IMG, rating: 5 },
   { id: 103, title: 'Финишное масло против лака', meta: 'Совет · 4 мин чтения', img: CARVE_IMG, rating: 4 },
 ];
 
-function Stars({ value, onRate }: { value: number; onRate: (n: number) => void }) {
-  const [hover, setHover] = useState(0);
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button
-          key={n}
-          onMouseEnter={() => setHover(n)}
-          onMouseLeave={() => setHover(0)}
-          onClick={() => onRate(n)}
-          className="transition-transform hover:scale-125"
-          aria-label={`Оценить на ${n}`}
-        >
-          <Icon
-            name="Star"
-            size={18}
-            className={
-              (hover || value) >= n
-                ? 'fill-accent text-accent'
-                : 'text-muted-foreground/40'
-            }
-          />
-        </button>
-      ))}
-    </div>
-  );
-}
-
 const Index = () => {
-  const [lessons, setLessons] = useState(initialLessons);
+  const [lessons, setLessons] = useState(lessonData);
   const [tips, setTips] = useState(initialTips);
 
-  const rate = (
-    items: RatedItem[],
-    setItems: (v: RatedItem[]) => void,
-    id: number,
-    n: number
-  ) => setItems(items.map((i) => (i.id === id ? { ...i, rating: n } : i)));
+  const rateLesson = (id: number, n: number) =>
+    setLessons(lessons.map((i) => (i.id === id ? { ...i, rating: n } : i)));
+  const rateTip = (id: number, n: number) =>
+    setTips(tips.map((i) => (i.id === id ? { ...i, rating: n } : i)));
 
   return (
     <div className="min-h-screen bg-background paper-grain text-foreground overflow-x-hidden">
@@ -152,24 +115,28 @@ const Index = () => {
               className="group animate-fade-up"
               style={{ animationDelay: `${idx * 0.08}s` }}
             >
-              <div className="relative overflow-hidden">
-                <img
-                  src={item.img}
-                  alt={item.title}
-                  className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-foreground/30 opacity-0 transition-opacity group-hover:opacity-100">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-foreground">
-                    <Icon name="Play" size={28} />
+              <Link to={`/urok/${item.slug}`} className="block">
+                <div className="relative overflow-hidden">
+                  <img
+                    src={item.img}
+                    alt={item.title}
+                    className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-foreground/30 opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                      <Icon name="Play" size={28} />
+                    </div>
                   </div>
+                  <span className="absolute left-3 top-3 bg-background/90 px-3 py-1 font-display text-xs uppercase tracking-wider">
+                    {item.meta}
+                  </span>
                 </div>
-                <span className="absolute left-3 top-3 bg-background/90 px-3 py-1 font-display text-xs uppercase tracking-wider">
-                  {item.meta}
-                </span>
-              </div>
-              <h3 className="mt-4 font-display text-2xl font-semibold uppercase leading-tight">{item.title}</h3>
+                <h3 className="mt-4 font-display text-2xl font-semibold uppercase leading-tight transition-colors group-hover:text-accent">
+                  {item.title}
+                </h3>
+              </Link>
               <div className="mt-3 flex items-center justify-between">
-                <Stars value={item.rating} onRate={(n) => rate(lessons, setLessons, item.id, n)} />
+                <Stars value={item.rating} onRate={(n) => rateLesson(item.id, n)} />
                 <span className="font-serif-craft text-lg text-muted-foreground">
                   {item.rating.toFixed(1)} / 5
                 </span>
@@ -200,7 +167,7 @@ const Index = () => {
                 <p className="font-display text-xs uppercase tracking-wider text-muted-foreground">{item.meta}</p>
                 <h3 className="mt-2 flex-1 font-serif-craft text-2xl font-semibold leading-snug">{item.title}</h3>
                 <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
-                  <Stars value={item.rating} onRate={(n) => rate(tips, setTips, item.id, n)} />
+                  <Stars value={item.rating} onRate={(n) => rateTip(item.id, n)} />
                   <span className="font-serif-craft text-lg text-muted-foreground">{item.rating.toFixed(1)}</span>
                 </div>
               </article>
